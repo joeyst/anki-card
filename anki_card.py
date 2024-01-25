@@ -64,6 +64,13 @@ class AnkiCard:
         self.learn_hard()
       case _:
         raise NotImplementedError()
+
+  def again(self):
+    match self.stage:
+      case "Learning":
+        self.learn_again()
+      case _:
+        raise NotImplementedError()
       
   def learn_easy(self):
     self.set_to_review()
@@ -87,6 +94,9 @@ class AnkiCard:
       self.set_review_date_to_average_of_first_two_steps()
     else:
       self.set_next_review_date_to_learning_step()
+
+  def learn_again(self):
+    self.step = 0
     
   def good(self): ...
   def hard(self): ...
