@@ -15,6 +15,8 @@ class AnkiCard:
   learning_steps: list[int]     = field(default_factory=default_learning_steps) # Used when learning a new card. (In minutes.)
   graduating_interval: int      = 1 # Used when graduating a card from learning mode. (In days.)
   easy_graduating_interval: int = 4 # Used when easy pressed in learning mode. (In days.) 
+  
+  # RELEARNING CONFIG 
   relearning_steps: list[int]   = field(default_factory=default_relearning_steps) # Used when relearning a card (lapsed). (In minutes.) 
   lapse_minimum_interval: int   = 1 # Used when lapsed. 
 
@@ -45,11 +47,28 @@ class AnkiCard:
         self.learn_easy()
       case _:
         raise NotImplementedError()
+
+  def good(self):
+    match self.stage:
+      case "Learning":
+        self.learn_good()
+      case _:
+        raise NotImplementedError()
       
   def learn_easy(self):
     self.set_to_review()
     self.set_to_easy_graduating_interval()
     self.set_next_review_date_to_interval()
+
+  def learn_good(self):
+    if self.is_ready_to_graduate():
+      self.set_to_review()
+      self.set_to_graduating_interval()
+      self.set_next_review_date_to_interval()
+      
+    else:
+      self.step += 1
+      self.set_next_review_date_to_learning_step()
     
   def good(self): ...
   def hard(self): ...
@@ -64,6 +83,15 @@ class AnkiCard:
     self.stage = "Relearning"
   def set_next_review_date_to_interval(self):
     self._next_review_date = datetime.now() + timedelta(days=self.interval)
+  def set_next_review_date_to_learning_step(self):
+    self._next_review_date = datetime.now() + timedelta(minutes=self.learning_steps[self.step])
+  def set_next_review_date_to_relearning_step(self):
+    self._next_review_date = datetime.now() + timedelta(minutes=self.relearning_steps[self.step])
+    
+  def set_to_easy_graduating_interval(self):
+    self.interval = self.easy_graduating_interval
+  def set_to_graduating_interval(self):
+    self.interval = self.graduating_interval
   
   def is_ready_to_graduate(self) -> bool:
     return self.step == len(self.learning_steps) - 1
