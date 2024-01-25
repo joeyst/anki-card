@@ -72,6 +72,8 @@ class AnkiCard:
         self.learn_hard()
       case "Review":
         self.review_hard()
+      case "Relearning":
+        self.relearn_hard()
       case _:
         raise NotImplementedError()
 
@@ -139,6 +141,14 @@ class AnkiCard:
     self.interval *= math.ceil(self.hard_interval_modifier)
     self.ease -= max(self.ease - 0.15, 1.3)
     self.set_next_review_date_to_interval()
+    
+  def relearn_hard(self):
+    if self.has_only_one_relearning_step():
+      self.set_review_date_to_one_card_hard_delay_relearning()
+    elif self.is_first_step():
+      self.set_review_date_to_average_of_first_two_steps_relearn()
+    else:
+      self.set_next_review_date_to_relearning_step()
 
   def learn_again(self):
     self.step = 0
@@ -188,7 +198,17 @@ class AnkiCard:
     one_and_a_half_delay = self.learning_steps[0] * 1.5
     delay = min(1440 + self.learning_steps[0], one_and_a_half_delay) # At max a day more than regular delay. 
     self._next_review_date = datetime.now() + timedelta(minutes=delay)
+  # TODO: Change to ..._learn
   def set_review_date_to_average_of_first_two_steps(self): 
     delay = (self.learning_steps[0] + self.learning_steps[1]) / 2
+    self._next_review_date = datetime.now() + timedelta(minutes=delay)
+  def set_review_date_to_average_of_first_two_steps_relearn(self): 
+    delay = (self.relearning_steps[0] + self.relearning_steps[1]) / 2
+    self._next_review_date = datetime.now() + timedelta(minutes=delay)
+  def set_review_date_to_one_card_hard_delay_relearning(self):
+    """ Sets delay for when there is only one card and recall is rated as hard. """
+    # For more info: https://docs.ankiweb.net/studying.html 
+    one_and_a_half_delay = self.relearning_steps[0] * 1.5
+    delay = min(1440 + self.relearning_steps[0], one_and_a_half_delay) # At max a day more than regular delay. 
     self._next_review_date = datetime.now() + timedelta(minutes=delay)
   
