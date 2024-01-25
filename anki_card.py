@@ -32,6 +32,9 @@ class AnkiCard:
   step: int                     = 0 # Step in learning or relearning.
   interval: int                 = None # Interval in days.
   _next_review_date: datetime   = datetime.now() # Next review date. 
+
+  # HISTORY 
+  keep_history: bool            = True 
   history: list[dict]           = field(default_factory=list) # Stores list of settings/operations dicts. 
 
   @property
