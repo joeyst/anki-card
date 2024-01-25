@@ -66,6 +66,8 @@ class AnkiCard:
     match self.stage:
       case "Learning":
         self.learn_hard()
+      case "Review":
+        self.review_hard()
       case _:
         raise NotImplementedError()
 
@@ -114,6 +116,11 @@ class AnkiCard:
       self.set_review_date_to_average_of_first_two_steps()
     else:
       self.set_next_review_date_to_learning_step()
+      
+  def review_hard(self):
+    self.interval *= math.ceil(self.hard_interval_modifier)
+    self.ease -= max(self.ease - 0.15, 1.3)
+    self.set_next_review_date_to_interval()
 
   def learn_again(self):
     self.step = 0
