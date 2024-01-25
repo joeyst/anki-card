@@ -57,6 +57,8 @@ class AnkiCard:
     match self.stage:
       case "Learning":
         self.learn_good()
+      case "Review":
+        self.review_good()
       case _:
         raise NotImplementedError()
       
@@ -97,6 +99,13 @@ class AnkiCard:
     else:
       self.step += 1
       self.set_next_review_date_to_learning_step()
+      
+  def review_good(self):
+    interval = self.interval * self.ease 
+    next_int = math.ceil(interval)
+    if next_int == prev_int:
+      next_int += 1
+    self.interval = next_int
       
   def learn_hard(self):
     if self.has_only_one_learning_step():
