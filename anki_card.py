@@ -39,9 +39,32 @@ class AnkiCard:
   def pickle(self) -> bytes: 
     return pickle.dumps(self)
     
-  def easy(self): ...
+  def easy(self):
+    match self.stage:
+      case "Learning":
+        self.learn_easy()
+      case _:
+        raise NotImplementedError()
+      
+  def learn_easy(self):
+    self.set_to_review()
+    self.set_to_easy_graduating_interval()
+    self.set_next_review_date_to_interval()
+    
   def good(self): ...
   def hard(self): ...
   def again(self): ...
   def print(self): ...
+  
+  def set_to_review(self):
+    self.stage = "Review"
+  def set_to_learning(self):
+    self.stage = "Learning"
+  def set_to_learning(self):
+    self.stage = "Relearning"
+  def set_next_review_date_to_interval(self):
+    self._next_review_date = datetime.now() + timedelta(days=self.interval)
+  
+  def is_ready_to_graduate(self) -> bool:
+    return self.step == len(self.learning_steps) - 1
   
