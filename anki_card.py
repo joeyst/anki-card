@@ -125,6 +125,12 @@ class AnkiCard:
   def learn_again(self):
     self.step = 0
     
+  def review_again(self):
+    self.ease -= max(self.ease - 0.20, 1.3)
+    self.interval *= math.ceil(max(self.new_interval_modifier, self.lapse_minimum_interval))
+    self.set_to_relearning()
+    self.set_next_review_date_to_relearning_step()
+    
   def good(self): ...
   def hard(self): ...
   def again(self): ...
