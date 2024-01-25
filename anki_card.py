@@ -61,6 +61,8 @@ class AnkiCard:
         self.learn_good()
       case "Review":
         self.review_good()
+      case "Relearning":
+        self.relearn_good()
       case _:
         raise NotImplementedError()
       
@@ -115,6 +117,15 @@ class AnkiCard:
     if next_int == prev_int:
       next_int += 1
     self.interval = next_int
+    
+  def relearn_good(self):
+    if self.is_ready_to_graduate_relearn():
+      self.set_to_review()
+      self.set_next_review_date_to_interval()
+      
+    else:
+      self.step += 1
+      self.set_next_review_date_to_relearning_step()
       
   def learn_hard(self):
     if self.has_only_one_learning_step():
@@ -161,12 +172,15 @@ class AnkiCard:
   def set_to_graduating_interval(self):
     self.interval = self.graduating_interval
   
+  # TODO: Change to is_ready_to_graduate_learn. 
   def is_ready_to_graduate(self) -> bool:
     return self.step == len(self.learning_steps) - 1
   def is_first_step(self) -> bool:
     return self.step == 0
   def has_only_one_learning_step(self) -> bool:
     return len(self.learning_steps) 
+  def is_ready_to_graduate_relearn(self) -> bool:
+    return self.step == len(self.relearning_steps) - 1
   
   def set_review_date_to_one_card_hard_delay_learning(self):
     """ Sets delay for when there is only one card and recall is rated as hard. """
