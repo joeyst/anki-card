@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta 
 import pickle 
+from pprint import pprint 
 
 def default_learning_steps():
   return [1, 10]
@@ -166,10 +167,31 @@ class AnkiCard:
   def relearn_again(self):
     self.step = 0
     
-  def good(self): ...
-  def hard(self): ...
-  def again(self): ...
-  def print(self): ...
+  def dict(self) -> dict:
+    return {
+      "learning_steps": self.learning_steps,
+      "graduating_interval": self.graduating_interval,
+      "easy_graduating_interval": self.easy_graduating_interval,
+      "relearning_steps": self.relearning_steps,
+      "lapse_minimum_interval": self.lapse_minimum_interval,
+      
+      "starting_ease": self.starting_ease,
+      "easy_bonus": self.easy_bonus,
+      "hard_interval_modifier": self.hard_interval_modifier,
+      "new_interval_modifier": self.new_interval_modifier,
+      
+      "ease": self.ease,
+      "stage": self.stage,
+      "step": self.step,
+      "interval": self.interval,
+      "next_review_date": self.next_review_date,
+      
+      "keep_history": self.keep_history,
+      "history": self.history
+    }
+    
+  def print(self): 
+    pprint(self.dict(), indent=2)
   
   def set_to_review(self):
     self.stage = "Review"
