@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta 
 import pickle 
 from pprint import pprint 
+import math 
 
 def default_learning_steps():
   return [1, 10]
@@ -43,7 +44,7 @@ class AnkiCard:
     return self._next_review_date 
   
   def pickle(self) -> bytes: 
-    return pickle.dumps(self)
+    return pickle.dumps(self.dict())
     
   def easy(self):
     match self.stage:
@@ -121,7 +122,7 @@ class AnkiCard:
   def review_good(self):
     interval = self.interval * self.ease 
     next_int = math.ceil(interval)
-    if next_int == prev_int:
+    if next_int == self.interval:
       next_int += 1
     self.interval = next_int
     
@@ -144,7 +145,7 @@ class AnkiCard:
       
   def review_hard(self):
     self.interval *= math.ceil(self.hard_interval_modifier)
-    self.ease -= max(self.ease - 0.15, 1.3)
+    self.ease = max(self.ease - 0.15, 1.3)
     self.set_next_review_date_to_interval()
     
   def relearn_hard(self):
@@ -159,7 +160,7 @@ class AnkiCard:
     self.step = 0
     
   def review_again(self):
-    self.ease -= max(self.ease - 0.20, 1.3)
+    self.ease = max(self.ease - 0.20, 1.3)
     self.interval *= math.ceil(max(self.new_interval_modifier, self.lapse_minimum_interval))
     self.set_to_relearning()
     self.set_next_review_date_to_relearning_step()
@@ -191,7 +192,9 @@ class AnkiCard:
     }
     
   def print(self): 
-    pprint(self.dict(), indent=2)
+    dct = self.dict()
+    dct["next_review_date"] = round(((datetime.now() - dct["next_review_date"]).total_seconds() / 60), 2)
+    pprint(dct, indent=2)
   
   def set_to_review(self):
     self.stage = "Review"
@@ -214,12 +217,14 @@ class AnkiCard:
   # TODO: Change to is_ready_to_graduate_learn. 
   def is_ready_to_graduate(self) -> bool:
     return self.step == len(self.learning_steps) - 1
-  def is_first_step(self) -> bool:
-    return self.step == 0
-  def has_only_one_learning_step(self) -> bool:
-    return len(self.learning_steps) 
   def is_ready_to_graduate_relearn(self) -> bool:
     return self.step == len(self.relearning_steps) - 1
+  def has_only_one_learning_step(self) -> bool:
+    return len(self.learning_steps) == 1
+  def has_only_one_relearning_step(self) -> bool:
+    return len(self.relearning_steps) == 1
+  def is_first_step(self) -> bool:
+    return self.step == 0
   
   def set_review_date_to_one_card_hard_delay_learning(self):
     """ Sets delay for when there is only one card and recall is rated as hard. """
@@ -241,3 +246,15 @@ class AnkiCard:
     delay = min(1440 + self.relearning_steps[0], one_and_a_half_delay) # At max a day more than regular delay. 
     self._next_review_date = datetime.now() + timedelta(minutes=delay)
   
+if __name__ == "__main__":
+  ac = AnkiCard()
+  methods = [
+    "learn_easy", "learn_good", "learn_hard", "learn_again",
+    "review_easy", "review_good", "review_hard", "review_again",
+    "relearn_easy", "relearn_good", "relearn_hard", "relearn_again"
+  ]
+  for method in methods:
+    print(f"Calling {method}")
+    getattr(ac, method)()
+    ac.print()
+    print()
