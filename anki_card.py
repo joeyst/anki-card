@@ -55,6 +55,13 @@ class AnkiCard:
       case _:
         raise NotImplementedError()
       
+  def hard(self):
+    match self.stage:
+      case "Learning":
+        self.learn_hard()
+      case _:
+        raise NotImplementedError()
+      
   def learn_easy(self):
     self.set_to_review()
     self.set_to_easy_graduating_interval()
@@ -69,6 +76,14 @@ class AnkiCard:
     else:
       self.step += 1
       self.set_next_review_date_to_learning_step()
+      
+  def learn_hard(self):
+    if self.has_only_one_learning_step():
+      self.set_review_date_to_one_card_hard_delay_learning()
+    elif self.is_first_step():
+      self.set_review_date_to_average_of_first_two_steps()
+    else:
+      self.set_next_review_date_to_learning_step()
     
   def good(self): ...
   def hard(self): ...
@@ -79,7 +94,7 @@ class AnkiCard:
     self.stage = "Review"
   def set_to_learning(self):
     self.stage = "Learning"
-  def set_to_learning(self):
+  def set_to_relearning(self):
     self.stage = "Relearning"
   def set_next_review_date_to_interval(self):
     self._next_review_date = datetime.now() + timedelta(days=self.interval)
@@ -95,4 +110,18 @@ class AnkiCard:
   
   def is_ready_to_graduate(self) -> bool:
     return self.step == len(self.learning_steps) - 1
+  def is_first_step(self) -> bool:
+    return self.step == 0
+  def has_only_one_learning_step(self) -> bool:
+    return len(self.learning_steps) 
+  
+  def set_review_date_to_one_card_hard_delay_learning(self):
+    """ Sets delay for when there is only one card and recall is rated as hard. """
+    # For more info: https://docs.ankiweb.net/studying.html 
+    one_and_a_half_delay = self.learning_steps[0] * 1.5
+    delay = min(1440 + self.learning_steps[0], one_and_a_half_delay) # At max a day more than regular delay. 
+    self._next_review_date = datetime.now() + timedelta(minutes=delay)
+  def set_review_date_to_average_of_first_two_steps(self): 
+    delay = (self.learning_steps[0] + self.learning_steps[1]) / 2
+    self._next_review_date = datetime.now() + timedelta(minutes=delay)
   
