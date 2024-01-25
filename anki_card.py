@@ -48,6 +48,8 @@ class AnkiCard:
     match self.stage:
       case "Learning":
         self.learn_easy()
+      case "Review":
+        self.review_easy()
       case _:
         raise NotImplementedError()
 
@@ -76,6 +78,15 @@ class AnkiCard:
     self.set_to_review()
     self.set_to_easy_graduating_interval()
     self.set_next_review_date_to_interval()
+    
+  def review_easy(self):
+    interval = self.interval * (self.ease * self.easy_bonus) 
+    next_int = math.ceil(interval)
+    if next_int == self.interval:
+      next_int += 1
+    self.interval = next_int
+    self.set_next_review_date_to_interval()
+    self.ease += 0.15
 
   def learn_good(self):
     if self.is_ready_to_graduate():
