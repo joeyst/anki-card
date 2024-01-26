@@ -209,7 +209,7 @@ class AnkiCard:
   def review_again(self):
     self._cond_add_guess_to_history("again")
     self.ease = max(self.ease - 0.20, 1.3)
-    self.interval *= math.ceil(max(self.new_interval_modifier, self.lapse_minimum_interval))
+    self.interval = math.ceil(max(self.interval * self.new_interval_modifier, self.lapse_minimum_interval))
     self.clip_interval()
     self.step = 0
     self.set_to_relearning()
