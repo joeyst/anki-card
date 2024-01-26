@@ -46,6 +46,32 @@ class AnkiCard:
   def pickle(self) -> bytes: 
     return pickle.dumps(self.dict())
 
+  @staticmethod
+  def unpickle(bytes) -> "AnkiCard":
+    bytes = pickle.loads(bytes)
+    
+    return AnkiCard(
+      learning_steps=bytes["learning_steps"],
+      graduating_interval=bytes["graduating_interval"],
+      easy_graduating_interval=bytes["easy_graduating_interval"],
+      relearning_steps=bytes["relearning_steps"],
+      lapse_minimum_interval=bytes["lapse_minimum_interval"],
+      
+      starting_ease=bytes["starting_ease"],
+      easy_bonus=bytes["easy_bonus"],
+      hard_interval_modifier=bytes["hard_interval_modifier"],
+      new_interval_modifier=bytes["new_interval_modifier"],
+      
+      ease=bytes["ease"],
+      stage=bytes["stage"],
+      step=bytes["step"],
+      interval=bytes["interval"],
+      _next_review_date=bytes["next_review_date"],
+      
+      keep_history=bytes["keep_history"],
+      history=bytes["history"],
+    )
+
   def config(self, **kwargs):
     if self.keep_history:
       self.history.append({"action": "config"} | kwargs)
@@ -210,7 +236,7 @@ class AnkiCard:
       "next_review_date": self.next_review_date,
       
       "keep_history": self.keep_history,
-      "history": self.history
+      "history": self.history,
     }
     
   def print(self, incl_history=True): 
@@ -295,4 +321,5 @@ if __name__ == "__main__":
     getattr(ac, method)()
     ac.print()
     print()
-    ac.pickle()
+    ac_pickled = ac.pickle()
+    print(AnkiCard.unpickle(ac_pickled))
