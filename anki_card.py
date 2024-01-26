@@ -231,7 +231,6 @@ class AnkiCard:
     one_and_a_half_delay = self.learning_steps[0] * 1.5
     delay = min(1440 + self.learning_steps[0], one_and_a_half_delay) # At max a day more than regular delay. 
     self._next_review_date = datetime.now() + timedelta(minutes=delay)
-  # TODO: Change to ..._learn
   def set_review_date_to_average_of_first_two_steps_learn(self): 
     delay = (self.learning_steps[0] + self.learning_steps[1]) / 2
     self._next_review_date = datetime.now() + timedelta(minutes=delay)
