@@ -27,6 +27,7 @@ class AnkiCard:
   easy_bonus: float             = 1.30 # Bonus for easy. 
   hard_interval_modifier: float = 1.20 # Multiplier for hard. Replaces other interval multipliers. 
   new_interval_modifier: float  = 0.00 # Multiplier for new cards. Replaces other interval multipliers. 
+  max_interval: float           = 36500.00 # Max interval. 
 
   # VARIABLES 
   ease: float                   = starting_ease # Ease multiplier.
@@ -133,6 +134,7 @@ class AnkiCard:
     if next_int == self.interval:
       next_int += 1
     self.interval = next_int
+    self.clip_interval()
     self.set_next_review_date_to_interval()
     self.ease += 0.15
     
@@ -140,6 +142,7 @@ class AnkiCard:
     self._cond_add_guess_to_history("easy")
     self.stage = "Review"
     self.interval = self.easy_graduating_interval
+    self.clip_interval() # Ambitious easy graduating interval :) 
     self.set_next_review_date_to_interval()
 
   def learn_good(self):
@@ -160,6 +163,8 @@ class AnkiCard:
     if next_int == self.interval:
       next_int += 1
     self.interval = next_int
+    self.clip_interval()
+    self.set_next_review_date_to_interval()
     
   def relearn_good(self):
     self._cond_add_guess_to_history("good")
@@ -183,6 +188,7 @@ class AnkiCard:
   def review_hard(self):
     self._cond_add_guess_to_history("hard")
     self.interval *= math.ceil(self.hard_interval_modifier)
+    self.clip_interval()
     self.ease = max(self.ease - 0.15, 1.3)
     self.set_next_review_date_to_interval()
     
@@ -204,6 +210,7 @@ class AnkiCard:
     self._cond_add_guess_to_history("again")
     self.ease = max(self.ease - 0.20, 1.3)
     self.interval *= math.ceil(max(self.new_interval_modifier, self.lapse_minimum_interval))
+    self.clip_interval()
     self.step = 0
     self.set_to_relearning()
     self.set_next_review_date_to_relearning_step()
@@ -231,6 +238,7 @@ class AnkiCard:
       "easy_bonus": self.easy_bonus,
       "hard_interval_modifier": self.hard_interval_modifier,
       "new_interval_modifier": self.new_interval_modifier,
+      "max_interval": self.max_interval,
       
       "ease": self.ease,
       "stage": self.stage,
@@ -263,8 +271,10 @@ class AnkiCard:
     
   def set_to_easy_graduating_interval(self):
     self.interval = self.easy_graduating_interval
+    self.clip_interval()
   def set_to_graduating_interval(self):
     self.interval = self.graduating_interval
+    self.clip_interval()
   
   def is_ready_to_graduate_learn(self) -> bool:
     return self.step == len(self.learning_steps) - 1
@@ -295,6 +305,9 @@ class AnkiCard:
     one_and_a_half_delay = self.relearning_steps[0] * 1.5
     delay = min(1440 + self.relearning_steps[0], one_and_a_half_delay) # At max a day more than regular delay. 
     self._next_review_date = datetime.now() + timedelta(minutes=delay)
+
+  def clip_interval(self):
+    self.interval = min(self.interval, self.max_interval)
   
   def _cond_add_guess_to_history(self, rating):
     if self.keep_history:
