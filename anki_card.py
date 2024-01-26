@@ -33,7 +33,7 @@ class AnkiCard:
   stage: str                    = "Learning" # Stage of card. "Learning" | "Review" | "Relearning". 
   step: int                     = 0 # Step in learning or relearning.
   interval: int                 = None # Interval in days.
-  _next_review_date: datetime   = datetime.now() # Next review date. 
+  _next_review_date: datetime   = field(default_factory=datetime.now) # Next review date. 
 
   # HISTORY 
   keep_history: bool            = True 
@@ -184,6 +184,12 @@ class AnkiCard:
     self._cond_add_guess_to_history("again")
     self.step = 0
     
+  def is_ready_for_review(self) -> bool:
+    return self.time_til_review() <= timedelta(0)
+
+  def time_til_review(self) -> timedelta:
+    return self.next_review_date - datetime.now()
+    
   def dict(self) -> dict:
     return {
       "learning_steps": self.learning_steps,
@@ -289,3 +295,4 @@ if __name__ == "__main__":
     getattr(ac, method)()
     ac.print()
     print()
+    ac.pickle()
