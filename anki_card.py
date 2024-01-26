@@ -45,6 +45,10 @@ class AnkiCard:
   
   def pickle(self) -> bytes: 
     return pickle.dumps(self.dict())
+
+  def config(self, **kwargs):
+    if self.keep_history:
+      self.history.append({"action": "config"} | kwargs)
     
   def easy(self):
     match self.stage:
@@ -91,11 +95,13 @@ class AnkiCard:
         raise NotImplementedError()
       
   def learn_easy(self):
+    self._cond_add_guess_to_history("easy")
     self.set_to_review()
     self.set_to_easy_graduating_interval()
     self.set_next_review_date_to_interval()
     
   def review_easy(self):
+    self._cond_add_guess_to_history("easy")
     interval = self.interval * (self.ease * self.easy_bonus) 
     next_int = math.ceil(interval)
     if next_int == self.interval:
@@ -105,11 +111,13 @@ class AnkiCard:
     self.ease += 0.15
     
   def relearn_easy(self):
+    self._cond_add_guess_to_history("easy")
     self.stage = "Review"
     self.interval = self.easy_graduating_interval
     self.set_next_review_date_to_interval()
 
   def learn_good(self):
+    self._cond_add_guess_to_history("good")
     if self.is_ready_to_graduate_learn():
       self.set_to_review()
       self.set_to_graduating_interval()
@@ -120,6 +128,7 @@ class AnkiCard:
       self.set_next_review_date_to_learning_step()
       
   def review_good(self):
+    self._cond_add_guess_to_history("good")
     interval = self.interval * self.ease 
     next_int = math.ceil(interval)
     if next_int == self.interval:
@@ -127,6 +136,7 @@ class AnkiCard:
     self.interval = next_int
     
   def relearn_good(self):
+    self._cond_add_guess_to_history("good")
     if self.is_ready_to_graduate_relearn():
       self.set_to_review()
       self.set_next_review_date_to_interval()
@@ -136,6 +146,7 @@ class AnkiCard:
       self.set_next_review_date_to_relearning_step()
       
   def learn_hard(self):
+    self._cond_add_guess_to_history("hard")
     if self.has_only_one_learning_step():
       self.set_review_date_to_one_card_hard_delay_learning()
     elif self.is_first_step():
@@ -144,11 +155,13 @@ class AnkiCard:
       self.set_next_review_date_to_learning_step()
       
   def review_hard(self):
+    self._cond_add_guess_to_history("hard")
     self.interval *= math.ceil(self.hard_interval_modifier)
     self.ease = max(self.ease - 0.15, 1.3)
     self.set_next_review_date_to_interval()
     
   def relearn_hard(self):
+    self._cond_add_guess_to_history("hard")
     if self.has_only_one_relearning_step():
       self.set_review_date_to_one_card_hard_delay_relearning()
     elif self.is_first_step():
@@ -157,15 +170,18 @@ class AnkiCard:
       self.set_next_review_date_to_relearning_step()
 
   def learn_again(self):
+    self._cond_add_guess_to_history("again")
     self.step = 0
     
   def review_again(self):
+    self._cond_add_guess_to_history("again")
     self.ease = max(self.ease - 0.20, 1.3)
     self.interval *= math.ceil(max(self.new_interval_modifier, self.lapse_minimum_interval))
     self.set_to_relearning()
     self.set_next_review_date_to_relearning_step()
     
   def relearn_again(self):
+    self._cond_add_guess_to_history("again")
     self.step = 0
     
   def dict(self) -> dict:
@@ -191,9 +207,10 @@ class AnkiCard:
       "history": self.history
     }
     
-  def print(self): 
+  def print(self, incl_history=True): 
     dct = self.dict()
     dct["next_review_date"] = round(((dct["next_review_date"] - datetime.now()).total_seconds() / 60), 2)
+    if not incl_history: del dct["history"]
     pprint(dct, indent=2)
   
   def set_to_review(self):
@@ -243,6 +260,22 @@ class AnkiCard:
     one_and_a_half_delay = self.relearning_steps[0] * 1.5
     delay = min(1440 + self.relearning_steps[0], one_and_a_half_delay) # At max a day more than regular delay. 
     self._next_review_date = datetime.now() + timedelta(minutes=delay)
+  
+  def _cond_add_guess_to_history(self, rating):
+    if self.keep_history:
+      self._add_guess_to_history(rating)
+  
+  def _add_guess_to_history(self, rating):
+    dct = self.dict()
+    self.history.append({
+      "action": "guess",
+      "rating": rating,
+      "ease": dct["ease"],
+      "stage": dct["stage"],
+      "step": dct["interval"],
+      "next_review_date": dct["next_review_date"],
+      "time": datetime.now(),
+    })
   
 if __name__ == "__main__":
   ac = AnkiCard()
