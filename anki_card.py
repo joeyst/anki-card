@@ -110,7 +110,7 @@ class AnkiCard:
     self.set_next_review_date_to_interval()
 
   def learn_good(self):
-    if self.is_ready_to_graduate():
+    if self.is_ready_to_graduate_learn():
       self.set_to_review()
       self.set_to_graduating_interval()
       self.set_next_review_date_to_interval()
@@ -139,7 +139,7 @@ class AnkiCard:
     if self.has_only_one_learning_step():
       self.set_review_date_to_one_card_hard_delay_learning()
     elif self.is_first_step():
-      self.set_review_date_to_average_of_first_two_steps()
+      self.set_review_date_to_average_of_first_two_steps_learn()
     else:
       self.set_next_review_date_to_learning_step()
       
@@ -193,7 +193,7 @@ class AnkiCard:
     
   def print(self): 
     dct = self.dict()
-    dct["next_review_date"] = round(((datetime.now() - dct["next_review_date"]).total_seconds() / 60), 2)
+    dct["next_review_date"] = round(((dct["next_review_date"] - datetime.now()).total_seconds() / 60), 2)
     pprint(dct, indent=2)
   
   def set_to_review(self):
@@ -214,8 +214,7 @@ class AnkiCard:
   def set_to_graduating_interval(self):
     self.interval = self.graduating_interval
   
-  # TODO: Change to is_ready_to_graduate_learn. 
-  def is_ready_to_graduate(self) -> bool:
+  def is_ready_to_graduate_learn(self) -> bool:
     return self.step == len(self.learning_steps) - 1
   def is_ready_to_graduate_relearn(self) -> bool:
     return self.step == len(self.relearning_steps) - 1
@@ -233,7 +232,7 @@ class AnkiCard:
     delay = min(1440 + self.learning_steps[0], one_and_a_half_delay) # At max a day more than regular delay. 
     self._next_review_date = datetime.now() + timedelta(minutes=delay)
   # TODO: Change to ..._learn
-  def set_review_date_to_average_of_first_two_steps(self): 
+  def set_review_date_to_average_of_first_two_steps_learn(self): 
     delay = (self.learning_steps[0] + self.learning_steps[1]) / 2
     self._next_review_date = datetime.now() + timedelta(minutes=delay)
   def set_review_date_to_average_of_first_two_steps_relearn(self): 
